@@ -32,15 +32,26 @@ def test_parse_template_headers_mixed():
     headers = ExtractionLogic.parse_template_headers(template)
     assert headers == ["Valid H2", "Another H2"]
 
-def test_extract_pdf_text_stub():
-    path = Path("test.pdf")
+def test_extract_pdf_text_multi_page():
+    # Use the generated test_multi_page.pdf
+    path = Path("test_multi_page.pdf")
     result = ExtractionLogic.extract_pdf_text(path)
-    assert "Extracted text from PDF: test.pdf" in result
+    assert "Page 1 Content" in result
+    assert "Page 2 Content" in result
 
-def test_extract_pptx_text_stub():
-    path = Path("test.pptx")
+def test_extract_pptx_text_full():
+    # Use the generated test_extraction_demo.pptx
+    path = Path("test_extraction_demo.pptx")
     result = ExtractionLogic.extract_pptx_text(path)
-    assert "Extracted text from PPTX: test.pptx" in result
+    
+    assert "Welcome to Slide 1" in result
+    assert "This is a bullet point in Slide 1" in result
+    assert "Extra text box 1" in result
+    assert "Notes for Slide 1" in result
+    assert "Slide 2 Title" in result
+    assert "Extra text box 2" in result
+    assert "Notes for Slide 2" in result
+
 
 def test_map_content_to_headers():
     content = "This is a long lecture transcript about Calculus."
