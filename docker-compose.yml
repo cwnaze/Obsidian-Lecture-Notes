@@ -1,0 +1,48 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: oln-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - oln-network
+    restart: always
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: oln-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - /home/cwnaze/Notes:/app/notes
+    networks:
+      - oln-network
+    depends_on:
+      - db
+    restart: always
+
+  db:
+    image: postgres:15-alpine
+    container_name: oln-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: oln_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - oln-network
+    restart: always
+
+volumes:
+  postgres_data:
+
+networks:
+  oln-network:
+    driver: bridge
