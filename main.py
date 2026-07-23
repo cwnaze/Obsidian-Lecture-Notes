@@ -5,6 +5,7 @@ import shutil
 import uuid
 from extraction import ExtractionLogic
 from template_parsing_engine import TemplateParsingEngine
+from vault_writer import VaultWriter
 
 app = FastAPI()
 
@@ -15,6 +16,7 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 # Template Directory (using expanduser to resolve ~)
 TEMPLATES_DIR = Path("~/Notes/Templates").expanduser()
 template_engine = TemplateParsingEngine(str(TEMPLATES_DIR))
+vault_writer = VaultWriter(vault_path="/app/notes")
 
 @app.get("/templates")
 async def list_templates():
@@ -73,7 +75,7 @@ async def upload_large_file(
 
 def process_uploaded_file(file_path: Path, original_filename: str):
     """
-    Background task to extract text from the uploaded file.
+    Background task to extract text from the uploaded file and save it to the vault.
     """
     try:
         print(f"Processing file: {original_filename} at {file_path}")
@@ -89,7 +91,16 @@ def process_uploaded_file(file_path: Path, original_filename: str):
             text = f"Unsupported file format: {ext}"
             
         print(f"Successfully extracted text for {original_filename}")
-        # In a real app, we would save this text to a database or notify the user via WebSocket/Webhook
+
+        # Save the extracted text to the vault
+        # Use the original filename as the note name, ensuring it's .md
+        note_filename = Path(original_filename).stem + ".md"
+        success = vault_writer.write_note(note_filename, text)
+        
+        if success:
+            print(f"Successfully saved {note_filename} to the vault.")
+        else:
+            print(f"Failed to save {note_filename} to the vault.")
         
     except Exception as e:
         print(f"Error processing file {original_filename}: {str(e)}")
