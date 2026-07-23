@@ -25,7 +25,25 @@ services:
       - /home/cwnaze/Notes:/app/vault
     networks:
       - oln-network
+    depends_on:
+      - db
     restart: always
+
+  db:
+    image: postgres:15-alpine
+    container_name: oln-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: oln_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - oln-network
+    restart: always
+
+volumes:
+  postgres_data:
 
 networks:
   oln-network:
