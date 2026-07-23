@@ -1,0 +1,41 @@
+# --- Stage 1: Build ---
+FROM python:3.11-slim AS builder
+
+WORKDIR /app
+
+# Install build dependencies for PyMuPDF and other C-extensions
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# --- Stage 2: Runtime ---
+FROM python:3.11-slim AS runner
+
+WORKDIR /app
+
+# Install runtime system dependencies
+# ffmpeg is critical for Whisper/Audio processing
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a non-privileged user
+RUN addgroup --system --gid 101 pygroup && \
+    adduser --system --uid 101 pyuser
+USER pyuser
+
+# Copy installed python packages from builder
+COPY --from=builder /root/.local /home/pyuser/.local
+ENV PATH=/home/pyuser/.local/bin:${PATH}
+
+# Copy application code
+COPY . .
+
+EXPOSE 8000
+
+CMD ["python", "main.py"]
