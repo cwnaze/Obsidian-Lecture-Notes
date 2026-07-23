@@ -18,6 +18,13 @@ TEMPLATES_DIR = Path("~/Notes/Templates").expanduser()
 template_engine = TemplateParsingEngine(str(TEMPLATES_DIR))
 vault_writer = VaultWriter(vault_path="/app/notes")
 
+@app.get("/health")
+async def health_check():
+    """
+    Health check endpoint for deployment verification.
+    """
+    return {"status": "ok"}
+
 @app.get("/templates")
 async def list_templates():
     """

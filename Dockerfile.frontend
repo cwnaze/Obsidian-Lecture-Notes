@@ -28,6 +28,7 @@ USER svelteuser
 # Copy only the build output and production dependencies from builder
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/package*.json ./
+RUN npm ci --omit=dev
 
 # Expose the port SvelteKit adapter-node defaults to
 EXPOSE 3000
