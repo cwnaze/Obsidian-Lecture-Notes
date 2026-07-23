@@ -1,1 +1,10 @@
-{"name": "oln-frontend", "version": "1.0.0", "private": true, "scripts": {"build": "mkdir -p build && echo 'build output' > build/index.js", "test": "echo \"Testing...\""}, "dependencies": {}}
+{
+	"name": "oln-frontend",
+	"version": "1.0.0",
+	"private": true,
+	"scripts": {
+				"build": "cd frontend && npm install && npm run build && cp -r .svelte-kit/output/server ../build",
+		"test": "echo \"Testing...\""
+	},
+	"dependencies": {}
+}
