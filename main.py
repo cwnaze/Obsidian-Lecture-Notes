@@ -4,12 +4,41 @@ from pathlib import Path
 import shutil
 import uuid
 from extraction import ExtractionLogic
+from template_parsing_engine import TemplateParsingEngine
 
 app = FastAPI()
 
 # Configure upload directory
 UPLOAD_DIR = Path("/tmp/obsidian_uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+# Template Directory (using expanduser to resolve ~)
+TEMPLATES_DIR = Path("~/Notes/Templates").expanduser()
+template_engine = TemplateParsingEngine(str(TEMPLATES_DIR))
+
+@app.get("/templates")
+async def list_templates():
+    """
+    Lists all available template files in ~/Notes/Templates.
+    """
+    try:
+        templates = template_engine.list_templates()
+        return {"templates": templates}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list templates: {str(e)}")
+
+@app.get("/templates/{template_name}")
+async def read_template(template_name: str):
+    """
+    Reads the content of a specific template file.
+    """
+    try:
+        content = template_engine.read_template(template_name)
+        return {"template_name": template_name, "content": content}
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Template not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read template: {str(e)}")
 
 @app.post("/upload")
 async def upload_large_file(
