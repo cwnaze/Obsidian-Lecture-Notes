@@ -6,3 +6,6 @@ build
 !.env.example
 .cache
 .git
+venv/
+.git/
+__pycache__/
