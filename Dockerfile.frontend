@@ -1,36 +1,44 @@
 # --- Stage 1: Build ---
 FROM node:20-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Install dependencies first to leverage Docker layer caching
-COPY package*.json ./
-RUN npm ci
-
-# Copy source code and build
+# Copy all files to ensure we have everything for the build
 COPY . .
+
+# The build process happens inside the frontend directory
+WORKDIR /app/frontend
+RUN npm ci
 RUN npm run build
+
+# SvelteKit output for adapter-node is typically in .svelte-kit/output/server
+# We'll copy it to a stable location for the runner stage
+RUN cp -r .svelte-kit/output/server /app/build
 
 # --- Stage 2: Runtime ---
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Set environment to production
 ENV NODE_ENV=production
 
-# Create a non-privileged user for security
 RUN addgroup --system --gid 101 nodegroup && \
     adduser --system --uid 101 svelteuser
+
+# Copy the build output and the frontend package.json for production deps
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/frontend/package*.json ./
+
+# Install production dependencies as root, then switch user
+USER root
+RUN npm install --production
+
+# Ensure the build directory is owned by the svelteuser
+RUN chown -R svelteuser:nodegroup /app
+
 USER svelteuser
 
-# Copy only the build output and production dependencies from builder
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/package*.json ./
-
-# Expose the port SvelteKit adapter-node defaults to
 EXPOSE 3000
 
-# Start the application
-CMD ["node", "build"]
+# Start the application from the build directory
+CMD ["node", "build/index.js"]

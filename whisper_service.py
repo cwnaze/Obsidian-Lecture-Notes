@@ -9,11 +9,14 @@ class WhisperService:
     """
     def __init__(self, api_key: Optional[str] = None):
         # Use provided API key or fallback to environment variable
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.api_key = api_key or os.getenv("API_KEY")
         if not self.api_key:
-            raise ValueError("OpenAI API Key is required for WhisperService")
+            raise ValueError("API Key is required for WhisperService")
         
-        self.client = OpenAI(api_key=self.api_key)
+        self.client = OpenAI(
+            api_key=self.api_key,
+            base_url=os.getenv("AI_API_BASE_URL")
+        )
 
     def transcribe_audio(self, audio_path: Path, language: Optional[str] = None) -> str:
         """
@@ -29,7 +32,7 @@ class WhisperService:
         try:
             with open(audio_path, "rb") as audio_file:
                 transcript = self.client.audio.transcriptions.create(
-                    model="whisper-1", 
+                    model=os.getenv("MODEL_NAME", "whisper-1"), 
                     file=audio_file,
                     language=language if language else None
                 )
